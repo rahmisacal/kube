@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      securityContext:
+        fsGroup: 1000 
+        runAsUser: 0
+      containers:
+        - name: jenkins
+          image: jenkins:master
+#          command: [ "/bin/bash", "-c", "--" ]
+#          args: [ "while true; do sleep 30; done;" ]
+          env:
+            - name: JAVA_OPTS
+              value: -Djenkins.install.runSetupWizard=false
+          ports:
+            - name: http-port
+              containerPort: 8080
+              hostIP: 10.32.0.7
+            - name: jnlp-port
+              containerPort: 50000
+          volumeMounts:
+            - mountPath: "/var/jenkins_home"
+              name: jenkins-volume
+          imagePullPolicy: Never
+      restartPolicy: Always
+#      imagePullSecrets:
+#        - name: default-token-kch8q 
+      volumes:
+        - name: jenkins-volume
+          persistentVolumeClaim:
+            claimName: jenkins-volume-claim
